@@ -211,6 +211,21 @@ function updateUser(userId, updateData) {
         sheet.getRange(i + 1, updatedAtCol + 1).setValue(new Date());
       }
       
+      // プランが変更された場合、リッチメニューを適用
+      if (updateData.plan) {
+        try {
+          // RichMenus.gs の関数を呼び出し
+          // ※applyRichMenuByPlanが定義されていることを前提とする
+          if (typeof applyRichMenuByPlan === 'function') {
+            applyRichMenuByPlan(userId, updateData.plan);
+            Logger.log(`Applied rich menu for user ${userId} (Plan: ${updateData.plan})`);
+          }
+        } catch (e) {
+          Logger.log(`Failed to apply rich menu on plan update: ${e.toString()}`);
+          // リッチメニュー適用失敗はエラーとして返さず、ログ出力のみに留める
+        }
+      }
+      
       return { success: true, userId: userId };
     }
   }

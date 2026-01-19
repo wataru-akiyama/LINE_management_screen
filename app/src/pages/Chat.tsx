@@ -4,9 +4,8 @@ import { ChatWindow } from '../components/chat/ChatWindow';
 import { ChatSidePanel } from '../components/chat/ChatSidePanel';
 import { MessageInput } from '../components/chat/MessageInput';
 import { PlanBadge } from '../components/common/PlanBadge';
-import { StatusSelector } from '../components/common/StatusBadge';
 import { Button } from '../components/common/Button';
-import { getUser, updateUserStatus } from '../api/users';
+import { getUser } from '../api/users';
 import { getMessages, sendMessage } from '../api/messages';
 import { useStore } from '../store/useStore';
 import type { User, Message } from '../types';
@@ -97,17 +96,7 @@ export function Chat() {
         }
     };
 
-    const handleStatusChange = async (status: 'unread' | 'in_progress' | 'done') => {
-        if (!userId || !user) return;
 
-        const result = await updateUserStatus(userId, status);
-        if (result.success) {
-            setUser({ ...user, status });
-            addNotification('ステータスを更新しました', 'success');
-        } else {
-            addNotification('ステータスの更新に失敗しました', 'error');
-        }
-    };
 
     const handleUserUpdate = (updatedUser: User) => {
         setUser(updatedUser);
@@ -162,15 +151,11 @@ export function Chat() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <StatusSelector
-                            currentStatus={user.status || 'unread'}
-                            onChange={handleStatusChange}
-                        />
                         <button
                             onClick={() => setIsSidePanelOpen(!isSidePanelOpen)}
                             className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${isSidePanelOpen
-                                    ? 'bg-primary-100 text-primary-600'
-                                    : 'text-gray-500 hover:bg-gray-100'
+                                ? 'bg-primary-100 text-primary-600'
+                                : 'text-gray-500 hover:bg-gray-100'
                                 }`}
                         >
                             <InfoIcon />

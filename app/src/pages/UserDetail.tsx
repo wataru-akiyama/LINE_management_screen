@@ -1,24 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { SlidePanel } from '../common/SlidePanel';
-import { Button } from '../common/Button';
-import { PlanBadge } from '../common/PlanBadge';
-import { TagBadge, TagList } from '../common/TagBadge';
-import { Card } from '../common/Card';
-import type { User, Survey, DiagnosisHistory } from '../../types';
-import { mockSurveys } from '../../mocks/data';
-import { getDiagnosisHistory } from '../../api/diagnosis';
+import { Link, useParams } from 'react-router-dom';
+import { Header } from '../components/layout/Header';
+import { Button } from '../components/common/Button';
+import { PlanBadge } from '../components/common/PlanBadge';
+import { TagBadge, TagList } from '../components/common/TagBadge';
+import { Card } from '../components/common/Card';
+import { RadarChart, ActivityTimeline, EngagementScoreDisplay, NextActionsDisplay, ActivityHeatmap, SimilarUsers } from '../components/analytics';
+import type { User, UserSurveyAnswer, DiagnosisHistory } from '../types';
+import { mockSurveys } from '../mocks/data';
+import { getMockUserAnalytics } from '../mocks/userAnalytics';
+import { getDiagnosisHistory } from '../api/diagnosis';
+import { getUser } from '../api/users';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
-interface UserDetailProps {
-    user: User;
-    isOpen: boolean;
-    onClose: () => void;
-    onEditClick: () => void;
-}
-
-type TabType = 'profile' | 'diagnosis' | 'surveys';
+type TabType = 'profile' | 'diagnosis' | 'surveys' | 'analytics';
 
 const ChatIcon = () => (
     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -32,100 +28,150 @@ const EditIcon = () => (
     </svg>
 );
 
-export function UserDetail({ user, isOpen, onClose, onEditClick }: UserDetailProps) {
+export function UserDetail() {
+    const { userId } = useParams<{ userId: string }>();
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabType>('profile');
     const [diagnosisHistory, setDiagnosisHistory] = useState<DiagnosisHistory[]>([]);
     const [loadingDiagnosis, setLoadingDiagnosis] = useState(false);
-    const surveys = mockSurveys.filter((s) => s.userId === user.userId);
+
+    // ユーザー情報の取得
+    useEffect(() => {
+        const fetchUser = async () => {
+            if (!userId) return;
+            setLoading(true);
+            try {
+                const userData = await getUser(userId);
+                setUser(userData);
+            } catch (error) {
+                console.error('Failed to fetch user:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUser();
+    }, [userId]);
+
+    const surveys = user ? mockSurveys.filter((s) => s.userId === user.userId) : [];
 
     useEffect(() => {
-        if (isOpen && activeTab === 'diagnosis') {
+        if (user && activeTab === 'diagnosis') {
             setLoadingDiagnosis(true);
             getDiagnosisHistory(user.userId).then(history => {
                 setDiagnosisHistory(history);
                 setLoadingDiagnosis(false);
             });
         }
-    }, [isOpen, activeTab, user.userId]);
+    }, [activeTab, user?.userId]); // user.userId check included via user check inside
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return <div className="p-6">ユーザーが見つかりません</div>;
+    }
 
     const tabs = [
         { id: 'profile' as TabType, label: 'プロフィール' },
         { id: 'diagnosis' as TabType, label: '診断記録' },
         { id: 'surveys' as TabType, label: 'アンケート', count: surveys.length },
+        { id: 'analytics' as TabType, label: '分析' },
     ];
 
     return (
-        <SlidePanel isOpen={isOpen} onClose={onClose} title="ユーザー詳細" width="xl">
-            {/* ヘッダー */}
-            <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600 font-bold text-2xl">
-                        {user.name.charAt(0)}
-                    </div>
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
-                            <PlanBadge plan={user.plan} />
+        <div className="min-h-screen bg-gray-50 pb-12">
+            <Header
+                title="ユーザー詳細"
+                showBack={true}
+            />
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                {/* ヘッダー情報 */}
+                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600 font-bold text-2xl">
+                                {user.name.charAt(0)}
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
+                                    <PlanBadge plan={user.plan} />
+                                </div>
+                                <p className="text-gray-500">{user.teamName}</p>
+                                <p className="text-sm text-gray-400">{user.lineId}</p>
+                            </div>
                         </div>
-                        <p className="text-gray-500">{user.teamName}</p>
-                        <p className="text-sm text-gray-400">{user.lineId}</p>
+                        <div className="flex gap-2">
+                            {/* 編集機能はモックなので一旦ボタンだけ表示（機能未実装） */}
+                            <Button variant="secondary" size="sm" onClick={() => { }}>
+                                <EditIcon />
+                                <span className="ml-1">編集</span>
+                            </Button>
+                            <Link to={`/users/${user.userId}/chat`}>
+                                <Button variant="primary" size="sm">
+                                    <ChatIcon />
+                                    <span className="ml-1">チャット</span>
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="secondary" size="sm" onClick={onEditClick}>
-                        <EditIcon />
-                        <span className="ml-1">編集</span>
-                    </Button>
-                    <Link to={`/users/${user.userId}/chat`}>
-                        <Button variant="primary" size="sm">
-                            <ChatIcon />
-                            <span className="ml-1">チャット</span>
-                        </Button>
-                    </Link>
+
+                {/* タブ */}
+                <div className="flex border-b border-gray-200 mb-6 bg-white px-4 rounded-t-lg shadow-sm">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
+                                ? 'border-primary-500 text-primary-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                        >
+                            {tab.label}
+                            {tab.count !== undefined && (
+                                <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-gray-100">
+                                    {tab.count}
+                                </span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* タブコンテンツ */}
+                <div>
+                    {activeTab === 'profile' && (
+                        <ProfileTab user={user} />
+                    )}
+
+                    {activeTab === 'diagnosis' && (
+                        <DiagnosisTab
+                            history={diagnosisHistory}
+                            loading={loadingDiagnosis}
+                            currentDiagnosis={user.diagnosis}
+                        />
+                    )}
+                    {activeTab === 'surveys' && (
+                        <SurveysTab surveys={surveys} />
+                    )}
+                    {activeTab === 'analytics' && user && (
+                        <AnalyticsTab userId={user.userId} />
+                    )}
                 </div>
             </div>
-
-            {/* タブ */}
-            <div className="flex border-b border-gray-200 mb-6">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id
-                            ? 'border-primary-500 text-primary-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                            }`}
-                    >
-                        {tab.label}
-                        {tab.count !== undefined && (
-                            <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-gray-100">
-                                {tab.count}
-                            </span>
-                        )}
-                    </button>
-                ))}
-            </div>
-
-            {/* タブコンテンツ */}
-            <div className="min-h-[300px]">
-                {activeTab === 'profile' && (
-                    <ProfileTab user={user} />
-                )}
-
-                {activeTab === 'diagnosis' && (
-                    <DiagnosisTab
-                        history={diagnosisHistory}
-                        loading={loadingDiagnosis}
-                        currentDiagnosis={user.diagnosis}
-                    />
-                )}
-                {activeTab === 'surveys' && (
-                    <SurveysTab surveys={surveys} />
-                )}
-            </div>
-        </SlidePanel>
+        </div>
     );
 }
+
+// サブコンポーネント (ProfileTab, DiagnosisTab, SurveysTab)
+// 元のファイルからコピー
 
 // プロフィールタブ
 function ProfileTab({ user }: { user: User }) {
@@ -372,7 +418,7 @@ function DiagnosisTab({
 }
 
 // アンケートタブ
-function SurveysTab({ surveys }: { surveys: Survey[] }) {
+function SurveysTab({ surveys }: { surveys: UserSurveyAnswer[] }) {
     if (surveys.length === 0) {
         return (
             <div className="text-center py-8">
@@ -395,12 +441,91 @@ function SurveysTab({ surveys }: { surveys: Survey[] }) {
                         {Object.entries(survey.answers).map(([key, value]) => (
                             <div key={key} className="flex justify-between text-sm">
                                 <dt className="text-gray-500">{key}</dt>
-                                <dd className="font-medium">{value}</dd>
+                                <dd className="font-medium">{value as string}</dd>
                             </div>
                         ))}
                     </dl>
                 </Card>
             ))}
+        </div>
+    );
+}
+
+// 分析タブ
+function AnalyticsTab({ userId }: { userId: string }) {
+    const analytics = getMockUserAnalytics(userId);
+
+    const handleSimilarUserClick = (targetUserId: string) => {
+        window.open(`/users/${targetUserId}`, '_blank');
+    };
+
+    return (
+        <div className="space-y-6">
+            {/* 上段: レーダーチャート + エンゲージメントスコア */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="text-xl">📊</span>
+                        能力値チャート
+                    </h3>
+                    <RadarChart stats={analytics.abilities} />
+                </Card>
+
+                <Card>
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="text-xl">🔥</span>
+                        エンゲージメントスコア
+                    </h3>
+                    <EngagementScoreDisplay engagement={analytics.engagement} />
+                </Card>
+            </div>
+
+            {/* 中段: アクティビティタイムライン + ネクストアクション */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="text-xl">📅</span>
+                        活動タイムライン
+                    </h3>
+                    <ActivityTimeline activities={analytics.activities} maxItems={7} />
+                </Card>
+
+                <Card>
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="text-xl">💡</span>
+                        ネクストアクション
+                    </h3>
+                    <NextActionsDisplay actions={analytics.nextActions} />
+                </Card>
+            </div>
+
+            {/* 下段: ヒートマップ + 類似ユーザー */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {analytics.heatmapData && (
+                    <Card>
+                        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <span className="text-xl">🗓️</span>
+                            活動ヒートマップ
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-4">過去3ヶ月間のアクティビティ</p>
+                        <ActivityHeatmap data={analytics.heatmapData} />
+                    </Card>
+                )}
+
+                {analytics.similarUsers && (
+                    <Card>
+                        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                            <span className="text-xl">👥</span>
+                            類似ユーザー
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-4">同じ属性・診断結果のユーザー</p>
+                        <SimilarUsers
+                            users={analytics.similarUsers}
+                            onUserClick={handleSimilarUserClick}
+                        />
+                    </Card>
+                )}
+            </div>
         </div>
     );
 }

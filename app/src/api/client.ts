@@ -77,3 +77,37 @@ export async function gasApiClient<T>(
 
     return response.json();
 }
+
+// 大きなデータ用のAPIクライアント（POSTボディを使用）
+export async function gasApiClientWithBody<T>(
+    action: string,
+    params: Record<string, string | number | undefined> = {},
+    data?: object
+): Promise<T> {
+    const searchParams = new URLSearchParams();
+    searchParams.append('action', action);
+    searchParams.append('apiKey', API_KEY);
+
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+            searchParams.append(key, String(value));
+        }
+    });
+
+    const url = `${API_BASE_URL}?${searchParams.toString()}`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'text/plain',
+        },
+        body: data ? JSON.stringify(data) : undefined,
+    });
+
+    if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+    }
+
+    return response.json();
+}
+

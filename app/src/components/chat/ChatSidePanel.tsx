@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { StatusSelector } from '../common/StatusBadge';
 import { TagBadge } from '../common/TagBadge';
 import { PlanBadge } from '../common/PlanBadge';
 import { Button } from '../common/Button';
 import type { User } from '../../types';
-import { updateUser, updateUserStatus } from '../../api/users';
+import { updateUser } from '../../api/users';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
@@ -33,12 +32,7 @@ export function ChatSidePanel({ user, isOpen, onClose, onUserUpdate }: ChatSideP
     const [editingMemo, setEditingMemo] = useState(false);
     const [memo, setMemo] = useState(user.memo || '');
 
-    const handleStatusChange = async (status: 'unread' | 'in_progress' | 'done') => {
-        const result = await updateUserStatus(user.userId, status);
-        if (result.success) {
-            onUserUpdate({ ...user, status });
-        }
-    };
+
 
     const handleAddTag = async () => {
         if (!newTag.trim()) return;
@@ -107,14 +101,14 @@ export function ChatSidePanel({ user, isOpen, onClose, onUserUpdate }: ChatSideP
                     </div>
                 </div>
 
-                {/* 対応ステータス */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">対応ステータス</label>
-                    <StatusSelector
-                        currentStatus={user.status || 'unread'}
-                        onChange={handleStatusChange}
-                    />
-                </div>
+                {/* 未読数 */}
+                {user.unreadCount !== undefined && user.unreadCount > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        <p className="text-sm text-red-700">
+                            未読メッセージ: <span className="font-bold">{user.unreadCount}件</span>
+                        </p>
+                    </div>
+                )}
 
                 {/* 基本情報 */}
                 <div>

@@ -1,4 +1,4 @@
-import type { User, Message, Statistics, DeliveryLog, StepDeliveryConfig, Survey } from '../types';
+import type { User, Message, Statistics, DeliveryLog, StepDeliveryConfig, UserSurveyAnswer } from '../types';
 import { format, subDays, addDays } from 'date-fns';
 
 // 現在日時を基準にした日付を生成
@@ -319,7 +319,7 @@ export const mockStepDeliveryConfigs: StepDeliveryConfig[] = [
 ];
 
 // モックアンケートデータ
-export const mockSurveys: Survey[] = [
+export const mockSurveys: UserSurveyAnswer[] = [
     {
         surveyId: 'survey_001',
         userId: 'U7d782f128a899caa001',

@@ -4,6 +4,7 @@ interface HeaderProps {
     title: string;
     subtitle?: string;
     actions?: React.ReactNode;
+    showBack?: boolean;
 }
 
 const MenuIcon = () => (
@@ -18,8 +19,11 @@ const BellIcon = () => (
     </svg>
 );
 
-export function Header({ title, subtitle, actions }: HeaderProps) {
-    const { sidebarOpen, toggleSidebar, notifications } = useStore();
+import { useNavigate } from 'react-router-dom';
+
+export function Header({ title, subtitle, actions, showBack }: HeaderProps) {
+    const { toggleSidebar, notifications } = useStore();
+    const navigate = useNavigate();
 
     return (
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
@@ -34,11 +38,23 @@ export function Header({ title, subtitle, actions }: HeaderProps) {
                     </button>
 
                     {/* タイトル */}
-                    <div>
-                        <h1 className="text-xl font-bold text-gray-900">{title}</h1>
-                        {subtitle && (
-                            <p className="text-sm text-gray-500">{subtitle}</p>
+                    <div className="flex items-center gap-4">
+                        {showBack && (
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                            >
+                                <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                            </button>
                         )}
+                        <div>
+                            <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+                            {subtitle && (
+                                <p className="text-sm text-gray-500">{subtitle}</p>
+                            )}
+                        </div>
                     </div>
                 </div>
 

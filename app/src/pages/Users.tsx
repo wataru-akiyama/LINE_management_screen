@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { Header } from '../components/layout/Header';
 import { UserList } from '../components/users/UserList';
 import { UserFiltersComponent } from '../components/users/UserFilters';
-import { UserDetail } from '../components/users/UserDetail';
-import { UserEditModal } from '../components/users/UserEditModal';
 import { Button } from '../components/common/Button';
 import { getUsers } from '../api/users';
 import type { User, UserFilters, Pagination } from '../types';
@@ -13,9 +11,8 @@ export function Users() {
     const [pagination, setPagination] = useState<Pagination | null>(null);
     const [filters, setFilters] = useState<UserFilters>({});
     const [isLoading, setIsLoading] = useState(true);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [isDetailOpen, setIsDetailOpen] = useState(false);
-    const [isEditOpen, setIsEditOpen] = useState(false);
+    // const [selectedUser, setSelectedUser] = useState<User | null>(null); // logic removed
+    // const [isEditOpen, setIsEditOpen] = useState(false); // logic removed
 
     // データ取得
     useEffect(() => {
@@ -36,20 +33,7 @@ export function Users() {
     };
 
     const handleUserClick = (user: User) => {
-        setSelectedUser(user);
-        setIsDetailOpen(true);
-    };
-
-    const handleEditClick = () => {
-        setIsDetailOpen(false);
-        setIsEditOpen(true);
-    };
-
-    const handleEditSave = (updatedUser: User) => {
-        setUsers(users.map((u) => (u.userId === updatedUser.userId ? updatedUser : u)));
-        setSelectedUser(updatedUser);
-        setIsEditOpen(false);
-        setIsDetailOpen(true);
+        window.open(`/users/${user.userId}`, '_blank');
     };
 
     const handleFilterChange = (newFilters: UserFilters) => {
@@ -108,25 +92,9 @@ export function Users() {
                 )}
             </div>
 
-            {/* ユーザー詳細モーダル */}
-            {selectedUser && (
-                <UserDetail
-                    user={selectedUser}
-                    isOpen={isDetailOpen}
-                    onClose={() => setIsDetailOpen(false)}
-                    onEditClick={handleEditClick}
-                />
-            )}
+            {/* ユーザー詳細モーダル (削除済み - 別タブで開くように変更) */}
 
-            {/* ユーザー編集モーダル */}
-            {selectedUser && (
-                <UserEditModal
-                    user={selectedUser}
-                    isOpen={isEditOpen}
-                    onClose={() => setIsEditOpen(false)}
-                    onSave={handleEditSave}
-                />
-            )}
+
         </div>
     );
 }

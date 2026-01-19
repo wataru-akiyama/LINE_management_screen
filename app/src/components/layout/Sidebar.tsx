@@ -51,6 +51,24 @@ const ChatIcon = () => (
     </svg>
 );
 
+const RichMenuIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+    </svg>
+);
+
+const DiagnosisIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+    </svg>
+);
+
+const SurveyIcon = () => (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+    </svg>
+);
+
 interface NavItem {
     path: string;
     label: string;
@@ -63,6 +81,10 @@ const navItems: NavItem[] = [
     { path: '/chat', label: 'チャット', icon: <ChatIcon /> },
     { path: '/delivery', label: '配信管理', icon: <DeliveryIcon /> },
     { path: '/templates', label: 'テンプレート', icon: <TemplateIcon /> },
+    { path: '/richmenus', label: 'リッチメニュー', icon: <RichMenuIcon /> },
+    { path: '/diagnosis', label: '診断管理', icon: <DiagnosisIcon /> },
+    { path: '/surveys', label: 'アンケート', icon: <SurveyIcon /> },
+    { path: '/onboarding', label: '友達追加フロー', icon: <DiagnosisIcon /> },
     { path: '/settings', label: '設定', icon: <SettingsIcon /> },
 ];
 

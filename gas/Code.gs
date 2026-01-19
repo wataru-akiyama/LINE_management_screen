@@ -159,6 +159,155 @@ function handleRequest(e, method) {
         result = getTemplateCategories();
         break;
         
+      // リッチメニュー管理
+      case 'getRichMenus':
+        result = getRichMenus();
+        break;
+      case 'getRichMenu':
+        result = getRichMenu(e.parameter.id);
+        break;
+      case 'createRichMenu':
+        result = createRichMenu(JSON.parse(e.parameter.data || '{}'));
+        break;
+      case 'updateRichMenu':
+        result = updateRichMenu(e.parameter.id, JSON.parse(e.parameter.data || '{}'));
+        break;
+      case 'deleteRichMenu':
+        result = deleteRichMenu(e.parameter.id);
+        break;
+      case 'publishRichMenu':
+        result = publishRichMenu(e.parameter.id);
+        break;
+      case 'unpublishRichMenu':
+        result = unpublishRichMenu(e.parameter.id);
+        break;
+      case 'getRichMenuPlanMappings':
+        result = getRichMenuPlanMappings();
+        break;
+      case 'updateRichMenuPlanMapping':
+        result = updateRichMenuPlanMapping(e.parameter.plan, e.parameter.richMenuId);
+        break;
+      case 'applyRichMenusToAllUsers':
+        result = applyRichMenusToAllUsers();
+        break;
+      case 'linkRichMenuToUser':
+        result = linkRichMenuToUser(e.parameter.userId, e.parameter.richMenuId);
+        break;
+      case 'uploadRichMenuImage':
+        // POSTボディからデータを取得（大きな画像データ用）
+        var postData = {};
+        if (e.postData && e.postData.contents) {
+          try {
+            postData = JSON.parse(e.postData.contents);
+          } catch (err) {
+            Logger.log('Failed to parse POST body: ' + err);
+          }
+        }
+        result = uploadRichMenuImage(e.parameter.menuId, postData);
+        break;
+      case 'getRichMenuImage':
+        result = getRichMenuImage(e.parameter.imageId);
+        break;
+        
+      // 診断テンプレート管理
+      case 'getDiagnosisTemplates':
+        result = getDiagnosisTemplates();
+        break;
+      case 'getDiagnosisTemplate':
+        result = getDiagnosisTemplate(e.parameter.id);
+        break;
+      case 'createDiagnosisTemplate':
+        // POSTボディからデータを取得
+        var createPostData = {};
+        if (e.postData && e.postData.contents) {
+          try {
+            createPostData = JSON.parse(e.postData.contents);
+          } catch (err) {
+            Logger.log('Failed to parse POST body for createDiagnosisTemplate: ' + err);
+          }
+        }
+        result = createDiagnosisTemplate(createPostData);
+        break;
+      case 'updateDiagnosisTemplate':
+        // POSTボディからデータを取得
+        var updatePostData = {};
+        if (e.postData && e.postData.contents) {
+          try {
+            updatePostData = JSON.parse(e.postData.contents);
+          } catch (err) {
+            Logger.log('Failed to parse POST body for updateDiagnosisTemplate: ' + err);
+          }
+        }
+        result = updateDiagnosisTemplate(e.parameter.id, updatePostData);
+        break;
+      case 'deleteDiagnosisTemplate':
+        result = deleteDiagnosisTemplate(e.parameter.id);
+        break;
+        
+      // アンケート管理
+      case 'getSurveys':
+        result = getSurveys();
+        break;
+      case 'getSurvey':
+        result = getSurvey(e.parameter.id);
+        break;
+      case 'createSurvey':
+        // POSTボディからデータを取得
+        var createSurveyData = {};
+        if (e.postData && e.postData.contents) {
+          try {
+            createSurveyData = JSON.parse(e.postData.contents);
+          } catch (err) {
+            Logger.log('Failed to parse POST body for createSurvey: ' + err);
+          }
+        }
+        result = createSurvey(createSurveyData);
+        break;
+      case 'updateSurvey':
+        // POSTボディからデータを取得
+        var updateSurveyData = {};
+        if (e.postData && e.postData.contents) {
+          try {
+            updateSurveyData = JSON.parse(e.postData.contents);
+          } catch (err) {
+            Logger.log('Failed to parse POST body for updateSurvey: ' + err);
+          }
+        }
+        result = updateSurvey(e.parameter.id, updateSurveyData);
+        break;
+      case 'deleteSurvey':
+        result = deleteSurvey(e.parameter.id);
+        break;
+      case 'getSurveyResponses':
+        result = getSurveyResponses(e.parameter.surveyId);
+        break;
+      case 'getSurveyStats':
+        result = getSurveyStats(e.parameter.surveyId);
+        break;
+        
+      // 友達追加フロー設定
+      case 'getOnboardingFlowSettings':
+        result = getOnboardingFlowSettings();
+        break;
+      case 'updateOnboardingFlowSettings':
+        // POSTボディからデータを取得
+        var flowSettingsData = {};
+        if (e.postData && e.postData.contents) {
+          try {
+            flowSettingsData = JSON.parse(e.postData.contents);
+          } catch (err) {
+            Logger.log('Failed to parse POST body for updateOnboardingFlowSettings: ' + err);
+          }
+        }
+        result = updateOnboardingFlowSettings(flowSettingsData);
+        break;
+      case 'getProfileFieldDefinitions':
+        result = { fields: getProfileFieldDefinitions() };
+        break;
+      case 'getAvailableDiagnosisTemplates':
+        result = getAvailableDiagnosisTemplates();
+        break;
+        
       // メッセージ使用量
       case 'getMessageQuota':
         result = getMessageQuota();
@@ -247,6 +396,28 @@ function setupSpreadsheet() {
       'stepId', 'stepName', 'daysAfterRegistration', 'targetFilter',
       'messageContent', 'isActive', 'createdAt'
     ]]);
+  }
+  
+  // richmenu シート（リッチメニュー管理）
+  let richmenuSheet = ss.getSheetByName('richmenus');
+  if (!richmenuSheet) {
+    richmenuSheet = ss.insertSheet('richmenus');
+    richmenuSheet.getRange(1, 1, 1, 10).setValues([[
+      'id', 'name', 'lineRichMenuId', 'imageFileId', 'layout',
+      'areas', 'chatBarText', 'status', 'createdAt', 'updatedAt'
+    ]]);
+  }
+  
+  // richmenu_plans シート（プラン別メニュー設定）
+  let richmenuPlansSheet = ss.getSheetByName('richmenu_plans');
+  if (!richmenuPlansSheet) {
+    richmenuPlansSheet = ss.insertSheet('richmenu_plans');
+    richmenuPlansSheet.getRange(1, 1, 1, 2).setValues([['plan', 'richMenuId']]);
+    // 初期データ
+    richmenuPlansSheet.getRange(2, 1, 2, 2).setValues([
+      ['FREE', ''],
+      ['BASIC', '']
+    ]);
   }
   
   Logger.log('スプレッドシートのセットアップが完了しました');
